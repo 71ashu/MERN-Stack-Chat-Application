@@ -1,11 +1,21 @@
-import Register from "./Register"
 import axios from 'axios'
+import { UserContextProvider } from "./UserContext";
+import { Routes, Route } from 'react-router-dom';
+import Login from './Login';
+import Register from './Register';
+import CheckAuth from './Auth';
 
 function App() {
   axios.defaults.baseURL = 'http://localhost:4000';
   axios.defaults.withCredentials = true;
   return (
-    <Register/>
+    <UserContextProvider>
+      <Routes>
+        <Route path='' element={<Login/>}/>
+        <Route path='/register' element={<Register/>}/>
+        <Route path='/chats' element={<CheckAuth>Chats</CheckAuth>}></Route>
+      </Routes>
+    </UserContextProvider>
   )
 }
 

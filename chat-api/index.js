@@ -4,10 +4,13 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
+const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 
 dotenv.config();
 mongoose.connect(process.env.MONGO_URL);
 const jwtSecret = process.env.JWT_SECRET;
+const bcryptSalt = bcrypt.genSaltSync(10);
 
 const app = express();
 app.use(express.json());
@@ -15,19 +18,49 @@ app.use(cors({
     credentials: true,
     origin: "http://localhost:5173"
 }));
+app.use(cookieParser());
 
 app.get('/test', (req, res) => {
     res.json('test ok');
 });
 
+app.get('/profile', (req, res) => {
+    const {token} = req.cookies;
+    if(token) {
+        jwt.verify(token, jwtSecret, {}, (err, userData) => {
+            if(err) throw err;
+            res.json(userData);
+        });
+    } else {
+        res.status(401).json('Unauthorized');
+    }
+});
+
+app.post('/login', async (req, res) => {
+    const {username, password} = req.body;
+    const foundUser = await User.findOne({username});
+    if(foundUser) {
+        const passOk = bcrypt.compareSync(password, foundUser.password);
+        if (passOk) {
+            jwt.sign({userId:foundUser._id, username}, jwtSecret, {}, (err, token) => {
+                res.cookie('token', token, {sameSite:'none', secure:true}).json({
+                    id: foundUser._id,
+                });
+            });
+        }
+    }
+});
+
 app.post('/register', async (req, res) => {
     const {username, password} = req.body;
     try {
-        const createdUser = await User.create({username, password});
-        jwt.sign({ userId: createdUser._id }, jwtSecret, {}, (err, token) => {
+        const hashedPassword = bcrypt.hashSync(password, bcryptSalt);
+        const createdUser = await User.create({username, password: hashedPassword});
+        jwt.sign({ userId: createdUser._id, username }, jwtSecret, {}, (err, token) => {
             if(err) throw err;
-            res.cookie('token', token).status(201).json({
-                id: createdUser._id
+            res.cookie('token', token, { sameSite:'none', secure: true }).status(201).json({
+                id: createdUser._id,
+                username
             });
         });
     } catch(err) {
