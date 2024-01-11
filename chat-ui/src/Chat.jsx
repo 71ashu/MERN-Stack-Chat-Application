@@ -48,6 +48,7 @@ const Chat = () => {
         text: newMessageText,
         sender: id,
         recipient: selectedUserId,
+        id: Date.now(),
       },
     ]);
   };
@@ -83,9 +84,17 @@ const Chat = () => {
           {!!selectedUserId && (
             <>
               <div className="flex-1 flex flex-col gap-2 overflow-auto">
-                {messages.map((message) => (
-                  <div className={'rounded-md shadow p-2 ' + (message.sender === id ? 'bg-blue-500 text-white self-end':'bg-white self-start')}>
-                    {message.sender === id ? 'ME:':''} {message.text} {message.sender === id}
+                {messagesWithoutDupes.map((message) => (
+                  <div
+                    className={
+                      "rounded-md shadow p-2 " +
+                      (message.sender === id
+                        ? "bg-blue-500 text-white self-end"
+                        : "bg-white self-start")
+                    }
+                  >
+                    {message.sender === id ? "ME:" : ""} {message.text}{" "}
+                    {message.sender === id}
                   </div>
                 ))}
               </div>
