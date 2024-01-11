@@ -4,8 +4,10 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
+const Message = require('./models/Message');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
+const ws = require('ws');
 
 dotenv.config();
 mongoose.connect(process.env.MONGO_URL);
@@ -69,4 +71,50 @@ app.post('/register', async (req, res) => {
     }
 });
 
-app.listen(4000);
+const server = app.listen(4000);
+
+const wss = new ws.WebSocketServer({server});
+
+wss.on('connection', (connection, req) => {
+    const cookies = req.headers.cookie;
+    if(cookies) {
+        const tokenCookieString = cookies.split(';').find(str => str.startsWith('token='));
+        if(tokenCookieString) {
+            const token = tokenCookieString.split('=')[1];
+            if(token) {
+                jwt.verify(token, jwtSecret, {}, (err, userData) => {
+                    if(err) throw err;
+                    const {username, userId} = userData;
+                    connection.username = username;
+                    connection.userId = userId;
+                });
+            }
+        }
+    }
+
+    connection.on('message', async (message) => {
+        const messageData = JSON.parse(message.toString());
+        const {recipient, text} = messageData;
+        if(recipient && text) {
+            const messageDoc = await Message.create({
+                sender: connection.userId,
+                recipient,
+                text
+            });
+            [...wss.clients]
+            .filter(c => c.userId === recipient)
+            .forEach(c => c.send(JSON.stringify({
+                text, 
+                sender: connection.userId,
+                recipient,
+                id: messageDoc._id
+            })));
+        }
+    });
+
+    [...wss.clients].forEach(client => {
+        client.send(JSON.stringify({
+            online: [...wss.clients].map(c => ({ userId: c.userId, username: c.username }))
+        }))
+    })
+});
