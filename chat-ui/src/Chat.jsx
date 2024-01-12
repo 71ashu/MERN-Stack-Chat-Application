@@ -1,7 +1,8 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import Avatar from "./Avatar";
 import { UserContext } from "./UserContext";
 import { uniqBy } from "lodash";
+import axios from 'axios';
 
 const Chat = () => {
   const [ws, setWS] = useState(null);
@@ -10,11 +11,21 @@ const Chat = () => {
   const { username, id } = useContext(UserContext);
   const [newMessageText, setNewMessageText] = useState("");
   const [messages, setMessages] = useState([]);
+  const messagesDivRef = useRef();
+
   useEffect(() => {
+    connectToWS();
+  }, []);
+
+  const connectToWS = () => {
     const ws = new WebSocket("ws://localhost:4000");
     setWS(ws);
     ws.addEventListener("message", handleMessage);
-  }, []);
+    ws.addEventListener("close", () => {
+      console.log('Disconnected. Trying to reconnect');
+      setTimeout(() => connectToWS(), 1000);
+    });
+  }
 
   const showOnlinePeople = (peopleArray) => {
     const people = {};
@@ -56,7 +67,18 @@ const Chat = () => {
   const onlinePeopleExclOurUser = { ...onlinePeople };
   delete onlinePeopleExclOurUser[id];
 
-  const messagesWithoutDupes = uniqBy(messages, "id");
+  const messagesWithoutDupes = uniqBy(messages, "_id");
+
+  useEffect(() => {
+    const div = messagesDivRef.current;
+    if (div) div.scrollTo(0, div.scrollHeight);
+  }, [messages]);
+
+  useEffect(() => {
+    if(selectedUserId) {
+      axios.get(`/messages/${selectedUserId}`).then(res => setMessages(res.data));
+    }
+  }, [selectedUserId]);
 
   return (
     <div className="bg-blue-50 h-screen">
@@ -68,12 +90,12 @@ const Chat = () => {
               key={userId}
               onClick={() => setSelectedUserId(userId)}
               className={
-                "border-b border-gray-100 py-2 flex items-center gap-2 cursor-pointer " +
+                "border-b border-gray-100 px-[15px] py-[10px] flex items-center gap-2 relative cursor-pointer " +
                 (userId === selectedUserId ? "bg-blue-50" : "")
               }
             >
               {userId === selectedUserId && (
-                <div className="w-1 bg-blue-500 h-12 rounded-r-md"></div>
+                <div className="w-1 bg-blue-500 h-full rounded-r-md absolute left-0 top-0"></div>
               )}
               <Avatar userId={userId} username={onlinePeople[userId]} />
               <span>{onlinePeople[userId]}</span>
@@ -83,9 +105,9 @@ const Chat = () => {
         <div className="bg-slate-200 flex-1 flex flex-col p-4">
           {!!selectedUserId && (
             <>
-              <div className="flex-1 flex flex-col gap-2 overflow-auto">
+              <div ref={messagesDivRef} className="flex-1 flex flex-col gap-2 overflow-auto scroll-smooth">
                 {messagesWithoutDupes.map((message) => (
-                  <div
+                  <div key={message._id}
                     className={
                       "rounded-md shadow p-2 " +
                       (message.sender === id
@@ -93,8 +115,7 @@ const Chat = () => {
                         : "bg-white self-start")
                     }
                   >
-                    {message.sender === id ? "ME:" : ""} {message.text}{" "}
-                    {message.sender === id}
+                    {message.text}
                   </div>
                 ))}
               </div>

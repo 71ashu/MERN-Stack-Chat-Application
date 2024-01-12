@@ -22,8 +22,32 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-app.get('/test', (req, res) => {
-    res.json('test ok');
+const getUserDataFromRequest = async (req) => {
+    return new Promise((resolve, reject) => {
+        const {token} = req.cookies;
+        if(token) {
+            jwt.verify(token, jwtSecret, {}, (err, userData) => {
+                if(err) throw err;
+                resolve(userData);
+            });
+        } else reject('no token');
+    });
+}
+
+app.get('/messages/:userId', async (req, res) => {
+    const {userId} = req.params;
+    const userData = await getUserDataFromRequest(req);
+    const ourUserId = userData.userId;
+    const messages = await Message.find({
+        sender: {$in: [userId, ourUserId]},
+        recipient: {$in: [userId, ourUserId]}
+    }).sort({createdAt: 1});
+    res.json(messages);
+});
+
+app.get('/people', async (req, res) => {
+    const users = await User.find({}, {'_id':1, username: 1});
+    res.json(users);
 });
 
 app.get('/profile', (req, res) => {
@@ -76,6 +100,32 @@ const server = app.listen(4000);
 const wss = new ws.WebSocketServer({server});
 
 wss.on('connection', (connection, req) => {
+
+    const notifyAboutOnlinePeople = () => {
+        [...wss.clients].forEach(client => {
+          client.send(JSON.stringify({
+            online: [...wss.clients].map(c => ({userId:c.userId,username:c.username})),
+          }));
+        });
+      }
+    
+      connection.isAlive = true;
+    
+      connection.timer = setInterval(() => {
+        connection.ping();
+        connection.deathTimer = setTimeout(() => {
+          connection.isAlive = false;
+          clearInterval(connection.timer);
+          connection.terminate();
+          notifyAboutOnlinePeople();
+          console.log('dead');
+        }, 1000);
+      }, 5000);
+    
+      connection.on('pong', () => {
+        clearTimeout(connection.deathTimer);
+      });
+
     const cookies = req.headers.cookie;
     if(cookies) {
         const tokenCookieString = cookies.split(';').find(str => str.startsWith('token='));
@@ -107,7 +157,7 @@ wss.on('connection', (connection, req) => {
                 text, 
                 sender: connection.userId,
                 recipient,
-                id: messageDoc._id
+                _id: messageDoc._id
             })));
         }
     });
