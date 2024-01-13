@@ -3,15 +3,18 @@ import Avatar from "./Avatar";
 import { UserContext } from "./UserContext";
 import { uniqBy } from "lodash";
 import axios from 'axios';
+import { useNavigate } from "react-router-dom";
 
 const Chat = () => {
   const [ws, setWS] = useState(null);
   const [onlinePeople, setOnlinePeople] = useState({});
   const [selectedUserId, setSelectedUserId] = useState(null);
-  const { username, id } = useContext(UserContext);
+  const { username, id, setId, setUsername } = useContext(UserContext);
   const [newMessageText, setNewMessageText] = useState("");
   const [messages, setMessages] = useState([]);
   const messagesDivRef = useRef();
+  const [showDropDown, setShowDropDown] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     connectToWS();
@@ -80,27 +83,48 @@ const Chat = () => {
     }
   }, [selectedUserId]);
 
+  const logout = () => {
+    axios.post('/logout').then(() => {
+      setWS(null);
+      setId(null);
+      setUsername(null);
+      navigate('/');
+    });
+  }
+
   return (
     <div className="bg-blue-50 h-screen">
       <div className="max-w-screen-xl md:w-full flex m-auto h-full shadow">
-        <div className="bg-white basis-1/4">
+        <div className="bg-white basis-1/4 flex flex-col">
           <div className="text-blue-600 font-bold mb-4 p-2">MERN Chat</div>
-          {Object.keys(onlinePeopleExclOurUser).map((userId) => (
-            <div
-              key={userId}
-              onClick={() => setSelectedUserId(userId)}
-              className={
-                "border-b border-gray-100 px-[15px] py-[10px] flex items-center gap-2 relative cursor-pointer " +
-                (userId === selectedUserId ? "bg-blue-50" : "")
-              }
-            >
-              {userId === selectedUserId && (
-                <div className="w-1 bg-blue-500 h-full rounded-r-md absolute left-0 top-0"></div>
-              )}
-              <Avatar userId={userId} username={onlinePeople[userId]} />
-              <span>{onlinePeople[userId]}</span>
-            </div>
-          ))}
+          <div className="flex-1 overflow-auto">
+            {Object.keys(onlinePeopleExclOurUser).map((userId) => (
+              <div
+                key={userId}
+                onClick={() => setSelectedUserId(userId)}
+                className={
+                  "border-b border-gray-100 px-[15px] py-[10px] flex items-center gap-2 relative cursor-pointer " +
+                  (userId === selectedUserId ? "bg-blue-50" : "")
+                }
+              >
+                {userId === selectedUserId && (
+                  <div className="w-1 bg-blue-500 h-full rounded-r-md absolute left-0 top-0"></div>
+                )}
+                <Avatar userId={userId} username={onlinePeople[userId]} />
+                <span>{onlinePeople[userId]}</span>
+              </div>
+            ))}
+          </div>
+          <div className="border-t px-[15px] py-[10px] flex items-center gap-2 cursor-pointer" onClick={() => setShowDropDown(!showDropDown)}>
+            <Avatar userId={id} username={username} />
+            <span className="flex-1">{username}</span>
+            <span className="justify-self-end relative">
+              :
+              <div className={"absolute rounded-md shadow bg-white transition-all right-0 " + (showDropDown ? "bottom-6 opacity-100 visible" : "bottom-0 opacity-0 invisible")}>
+                <div className="p-2 cursor-pointer" onClick={logout}>Logout</div>
+              </div>
+            </span>
+          </div>
         </div>
         <div className="bg-slate-200 flex-1 flex flex-col p-4">
           {!!selectedUserId && (
@@ -119,7 +143,7 @@ const Chat = () => {
                   </div>
                 ))}
               </div>
-              <div id="input-container" className="p-2">
+              <div id="input-container" className="mt-4">
                 <form className="flex gap-2" onSubmit={sendMessage}>
                   <input
                     type="text"

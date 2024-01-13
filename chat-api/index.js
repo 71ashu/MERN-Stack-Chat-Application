@@ -95,6 +95,10 @@ app.post('/register', async (req, res) => {
     }
 });
 
+app.post('/logout', (req, res) => {
+    res.clearCookie('token', { sameSite: 'none', secure: true }).json('ok');
+});
+
 const server = app.listen(4000);
 
 const wss = new ws.WebSocketServer({server});
