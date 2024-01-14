@@ -106,12 +106,19 @@ const wss = new ws.WebSocketServer({server});
 wss.on('connection', (connection, req) => {
 
     const notifyAboutOnlinePeople = () => {
+        const users = new Map();
         [...wss.clients].forEach(client => {
-          client.send(JSON.stringify({
-            online: [...wss.clients].map(c => ({userId:c.userId,username:c.username})),
-          }));
+            if(client.userId) users.set(client.userId, { userId: client.userId, username: client.username });
         });
-      }
+
+        const usersArray = Array.from(users).map(([userId, user]) => user);
+        
+        [...wss.clients].forEach(client => {
+            client.send(JSON.stringify({
+                online: usersArray
+            }));
+        });
+    }
     
       connection.isAlive = true;
     
@@ -166,9 +173,5 @@ wss.on('connection', (connection, req) => {
         }
     });
 
-    [...wss.clients].forEach(client => {
-        client.send(JSON.stringify({
-            online: [...wss.clients].map(c => ({ userId: c.userId, username: c.username }))
-        }))
-    })
+    notifyAboutOnlinePeople();
 });

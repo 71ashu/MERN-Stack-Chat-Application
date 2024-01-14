@@ -5,9 +5,32 @@ import { uniqBy } from "lodash";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 
+const Users = ({onlinePeople, selectedUserId, setSelectedUserId}) => {
+  return (
+    <div className="flex-1 overflow-auto">
+      {onlinePeople.map(({userId, username}) => (
+        <div
+          key={userId}
+          onClick={() => setSelectedUserId(userId)}
+          className={
+            "border-b border-gray-100 px-[15px] py-[10px] flex items-center gap-2 relative cursor-pointer " +
+            (userId === selectedUserId ? "bg-blue-50" : "")
+          }
+        >
+          {userId === selectedUserId && (
+            <div className="w-1 bg-blue-500 h-full rounded-r-md absolute left-0 top-0"></div>
+          )}
+          <Avatar userId={userId} username={username} />
+          <span>{username}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const Chat = () => {
   const [ws, setWS] = useState(null);
-  const [onlinePeople, setOnlinePeople] = useState({});
+  const [onlinePeople, setOnlinePeople] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const { username, id, setId, setUsername } = useContext(UserContext);
   const [newMessageText, setNewMessageText] = useState("");
@@ -30,18 +53,10 @@ const Chat = () => {
     });
   }
 
-  const showOnlinePeople = (peopleArray) => {
-    const people = {};
-    peopleArray.forEach(({ userId, username }) => {
-      people[userId] = username;
-    });
-    setOnlinePeople(people);
-  };
-
   const handleMessage = (ev) => {
     const messageData = JSON.parse(ev.data);
     if ("online" in messageData) {
-      showOnlinePeople(messageData.online);
+      setOnlinePeople(messageData.online.filter(({userId}) => userId !== id));
     } else if ("text" in messageData) {
       setMessages((prev) => [...prev, { ...messageData }]);
     }
@@ -66,9 +81,6 @@ const Chat = () => {
       },
     ]);
   };
-
-  const onlinePeopleExclOurUser = { ...onlinePeople };
-  delete onlinePeopleExclOurUser[id];
 
   const messagesWithoutDupes = uniqBy(messages, "_id");
 
@@ -97,24 +109,7 @@ const Chat = () => {
       <div className="max-w-screen-xl md:w-full flex m-auto h-full shadow">
         <div className="bg-white basis-1/4 flex flex-col">
           <div className="text-blue-600 font-bold mb-4 p-2">MERN Chat</div>
-          <div className="flex-1 overflow-auto">
-            {Object.keys(onlinePeopleExclOurUser).map((userId) => (
-              <div
-                key={userId}
-                onClick={() => setSelectedUserId(userId)}
-                className={
-                  "border-b border-gray-100 px-[15px] py-[10px] flex items-center gap-2 relative cursor-pointer " +
-                  (userId === selectedUserId ? "bg-blue-50" : "")
-                }
-              >
-                {userId === selectedUserId && (
-                  <div className="w-1 bg-blue-500 h-full rounded-r-md absolute left-0 top-0"></div>
-                )}
-                <Avatar userId={userId} username={onlinePeople[userId]} />
-                <span>{onlinePeople[userId]}</span>
-              </div>
-            ))}
-          </div>
+          <Users onlinePeople={onlinePeople} selectedUserId={selectedUserId} setSelectedUserId={setSelectedUserId} />
           <div className="border-t px-[15px] py-[10px] flex items-center gap-2 cursor-pointer" onClick={() => setShowDropDown(!showDropDown)}>
             <Avatar userId={id} username={username} />
             <span className="flex-1">{username}</span>
