@@ -77,7 +77,7 @@ const Chat = () => {
         text: newMessageText,
         sender: id,
         recipient: selectedUserId,
-        id: Date.now(),
+        _id: Date.now(),
       },
     ]);
   };
@@ -126,7 +126,7 @@ const Chat = () => {
             <>
               <div ref={messagesDivRef} className="flex-1 flex flex-col gap-2 overflow-auto scroll-smooth">
                 {messagesWithoutDupes.map((message) => (
-                  <div key={message._id}
+                  <div key={message.id}
                     className={
                       "rounded-md shadow p-2 " +
                       (message.sender === id
