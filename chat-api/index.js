@@ -5,6 +5,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
 const Message = require('./models/Message');
+const Chat = require('./models/Chat');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const ws = require('ws');
@@ -45,9 +46,15 @@ app.get('/messages/:userId', async (req, res) => {
     res.json(messages);
 });
 
-app.get('/people', async (req, res) => {
-    const users = await User.find({}, {'_id':1, username: 1});
-    res.json(users);
+app.get('/users', async (req, res) => {
+    const userData = await getUserDataFromRequest(req);
+    const keyword = req.query.search ? { 
+        $or: [ 
+            { username: { $regex: req.query.search, $options: "i" } } 
+        ], 
+    } : {};
+    const users = await User.find(keyword).find({ '_id': { $ne: userData.userId } });
+    res.send(users);
 });
 
 app.get('/profile', (req, res) => {
@@ -97,6 +104,18 @@ app.post('/register', async (req, res) => {
 
 app.post('/logout', (req, res) => {
     res.clearCookie('token', { sameSite: 'none', secure: true }).json('ok');
+});
+
+app.post('/chat', async (req, res) => {
+    const { userId } = req.body;
+    const userData = await getUserDataFromRequest(req);
+    if(userData) {
+        const createChat = await Chat.create({ 
+            users: [userId, userData.userId],
+            latestMessage: null
+        });
+        res.json(createChat);
+    }
 });
 
 const server = app.listen(4000);

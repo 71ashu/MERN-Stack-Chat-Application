@@ -4,6 +4,7 @@ import { UserContext } from "./UserContext";
 import { uniqBy } from "lodash";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
+import NewChatForm from "./NewChatForm";
 
 const Users = ({onlinePeople, selectedUserId, setSelectedUserId}) => {
   return (
@@ -38,6 +39,7 @@ const Chat = () => {
   const messagesDivRef = useRef();
   const [showDropDown, setShowDropDown] = useState(false);
   const navigate = useNavigate();
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     connectToWS();
@@ -104,11 +106,25 @@ const Chat = () => {
     });
   }
 
+  const closeModal = () => {
+    setShowForm(false);
+  };
+
+  const openModal = () => {
+    setShowForm(true);
+  };
+
   return (
     <div className="bg-blue-50 h-screen">
       <div className="max-w-screen-xl md:w-full flex m-auto h-full shadow">
         <div className="bg-white basis-1/4 flex flex-col">
           <div className="text-blue-600 font-bold mb-4 p-2">MERN Chat</div>
+          <div className="p-2">
+            <button className="bg-indigo-600 rounded text-white p-1 px-3" onClick={openModal}>
+              +
+            </button>
+            <NewChatForm userId={id} showForm={showForm} setShowForm={setShowForm}/>
+          </div>
           <Users onlinePeople={onlinePeople} selectedUserId={selectedUserId} setSelectedUserId={setSelectedUserId} />
           <div className="border-t px-[15px] py-[10px] flex items-center gap-2 cursor-pointer" onClick={() => setShowDropDown(!showDropDown)}>
             <Avatar userId={id} username={username} />
