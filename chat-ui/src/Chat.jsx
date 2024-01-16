@@ -6,25 +6,28 @@ import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 import NewChatForm from "./NewChatForm";
 
-const Users = ({onlinePeople, selectedUserId, setSelectedUserId}) => {
+const ChatsList = ({chats, id, selectedChatId, setSelectedChatId}) => {
   return (
     <div className="flex-1 overflow-auto">
-      {onlinePeople.map(({userId, username}) => (
-        <div
-          key={userId}
-          onClick={() => setSelectedUserId(userId)}
-          className={
-            "border-b border-gray-100 px-[15px] py-[10px] flex items-center gap-2 relative cursor-pointer " +
-            (userId === selectedUserId ? "bg-blue-50" : "")
-          }
-        >
-          {userId === selectedUserId && (
-            <div className="w-1 bg-blue-500 h-full rounded-r-md absolute left-0 top-0"></div>
-          )}
-          <Avatar userId={userId} username={username} />
-          <span>{username}</span>
-        </div>
-      ))}
+      {chats.map(({users, _id: chatId}) => {
+        const { username, _id: userId } = users.find(u => u._id !== id);
+        return (
+          <div
+            key={chatId}
+            onClick={() => setSelectedChatId(chatId)}
+            className={
+              "border-b border-gray-100 px-[15px] py-[10px] flex items-center gap-2 relative cursor-pointer " +
+              (chatId === selectedChatId ? "bg-blue-50" : "")
+            }
+          >
+            {chatId === selectedChatId && (
+              <div className="w-1 bg-blue-500 h-full rounded-r-md absolute left-0 top-0"></div>
+            )}
+            <Avatar userId={userId} username={username} />
+            <span>{username}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -32,7 +35,7 @@ const Users = ({onlinePeople, selectedUserId, setSelectedUserId}) => {
 const Chat = () => {
   const [ws, setWS] = useState(null);
   const [onlinePeople, setOnlinePeople] = useState([]);
-  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [selectedChatId, setSelectedChatId] = useState(null);
   const { username, id, setId, setUsername } = useContext(UserContext);
   const [newMessageText, setNewMessageText] = useState("");
   const [messages, setMessages] = useState([]);
@@ -40,6 +43,7 @@ const Chat = () => {
   const [showDropDown, setShowDropDown] = useState(false);
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
+  const [chats, setChats] = useState([]);
 
   useEffect(() => {
     connectToWS();
@@ -57,9 +61,10 @@ const Chat = () => {
 
   const handleMessage = (ev) => {
     const messageData = JSON.parse(ev.data);
+    console.log(messageData, messages);
     if ("online" in messageData) {
       setOnlinePeople(messageData.online.filter(({userId}) => userId !== id));
-    } else if ("text" in messageData) {
+    } else if ("content" in messageData) {
       setMessages((prev) => [...prev, { ...messageData }]);
     }
   };
@@ -68,17 +73,17 @@ const Chat = () => {
     ev.preventDefault();
     ws.send(
       JSON.stringify({
-        recipient: selectedUserId,
-        text: newMessageText,
+        chatId: selectedChatId,
+        content: newMessageText,
       })
     );
     setNewMessageText("");
     setMessages((prev) => [
       ...prev,
       {
-        text: newMessageText,
-        sender: id,
-        recipient: selectedUserId,
+        content: newMessageText,
+        senderId: id,
+        chatId: selectedChatId,
         _id: Date.now(),
       },
     ]);
@@ -92,10 +97,10 @@ const Chat = () => {
   }, [messages]);
 
   useEffect(() => {
-    if(selectedUserId) {
-      axios.get(`/messages/${selectedUserId}`).then(res => setMessages(res.data));
+    if(selectedChatId) {
+      axios.get(`/messages/${selectedChatId}`).then(res => setMessages(res.data));
     }
-  }, [selectedUserId]);
+  }, [selectedChatId]);
 
   const logout = () => {
     axios.post('/logout').then(() => {
@@ -114,6 +119,10 @@ const Chat = () => {
     setShowForm(true);
   };
 
+  useEffect(() => {
+    axios.get('/chats').then(res => setChats(res.data));
+  }, []);
+
   return (
     <div className="bg-blue-50 h-screen">
       <div className="max-w-screen-xl md:w-full flex m-auto h-full shadow">
@@ -123,9 +132,9 @@ const Chat = () => {
             <button className="bg-indigo-600 rounded text-white p-1 px-3" onClick={openModal}>
               +
             </button>
-            <NewChatForm userId={id} showForm={showForm} setShowForm={setShowForm}/>
+            <NewChatForm userId={id} showForm={showForm} closeModal={closeModal}/>
           </div>
-          <Users onlinePeople={onlinePeople} selectedUserId={selectedUserId} setSelectedUserId={setSelectedUserId} />
+          <ChatsList chats={chats} selectedChatId={selectedChatId} setSelectedChatId={setSelectedChatId} id={id} />
           <div className="border-t px-[15px] py-[10px] flex items-center gap-2 cursor-pointer" onClick={() => setShowDropDown(!showDropDown)}>
             <Avatar userId={id} username={username} />
             <span className="flex-1">{username}</span>
@@ -138,19 +147,19 @@ const Chat = () => {
           </div>
         </div>
         <div className="bg-slate-200 flex-1 flex flex-col p-4">
-          {!!selectedUserId && (
+          {!!selectedChatId && (
             <>
               <div ref={messagesDivRef} className="flex-1 flex flex-col gap-2 overflow-auto scroll-smooth">
                 {messagesWithoutDupes.map((message) => (
-                  <div key={message.id}
+                  <div key={message._id}
                     className={
                       "rounded-md shadow p-2 " +
-                      (message.sender === id
+                      (message.senderId === id
                         ? "bg-blue-500 text-white self-end"
                         : "bg-white self-start")
                     }
                   >
-                    {message.text}
+                    {message.content}
                   </div>
                 ))}
               </div>

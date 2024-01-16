@@ -1,10 +1,9 @@
 const mongoose = require('mongoose');
 
 const MessageSchema = new mongoose.Schema({
-  sender: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-  recipient: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-  chat: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-  text: String,
+  senderId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+  chatId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+  content: String,
   file: String,
 }, {timestamps:true});
 

@@ -46,23 +46,16 @@ const SearchUser = ({selectedUser, setSelectedUser}) => {
   );
 };
 
-const NewChatForm = ({ userId, showForm, setShowForm }) => {
+const NewChatForm = ({ userId, showForm, closeModal }) => {
 
   const [selectedUser, setSelectedUser] = useState(null);
-
-  const closeModal = () => {
-    setShowForm(false);
-  };
-
-  const openModal = () => {
-    setShowForm(true);
-  };
 
   const createChat = (ev) => {
     ev.preventDefault();
     axios.post('/chat', {
-      userId: selectedUser._id
-    }).then(res => res.data).then(console.log)
+      id: selectedUser._id,
+      username: selectedUser.username
+    }).then(closeModal);
   }
   
   return (

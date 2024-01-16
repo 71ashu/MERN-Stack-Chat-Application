@@ -35,14 +35,9 @@ const getUserDataFromRequest = async (req) => {
     });
 }
 
-app.get('/messages/:userId', async (req, res) => {
-    const {userId} = req.params;
-    const userData = await getUserDataFromRequest(req);
-    const ourUserId = userData.userId;
-    const messages = await Message.find({
-        sender: {$in: [userId, ourUserId]},
-        recipient: {$in: [userId, ourUserId]}
-    }).sort({createdAt: 1});
+app.get('/messages/:chatId', async (req, res) => {
+    const {chatId} = req.params;
+    const messages = await Message.find({ chatId }).sort({createdAt: 1});
     res.json(messages);
 });
 
@@ -107,15 +102,26 @@ app.post('/logout', (req, res) => {
 });
 
 app.post('/chat', async (req, res) => {
-    const { userId } = req.body;
+    const { id, username } = req.body;
     const userData = await getUserDataFromRequest(req);
     if(userData) {
         const createChat = await Chat.create({ 
-            users: [userId, userData.userId],
+            users: [
+                { _id: id, username },
+                { _id: userData.userId, username: userData.username }
+            ],
             latestMessage: null
         });
         res.json(createChat);
     }
+});
+
+app.get('/chats', async (req, res) => {
+    const {userId} = await getUserDataFromRequest(req);
+    const chats = await Chat.find({
+        users: { $elemMatch: { _id: userId } }
+    });
+    res.json(chats);
 });
 
 const server = app.listen(4000);
@@ -174,19 +180,23 @@ wss.on('connection', (connection, req) => {
 
     connection.on('message', async (message) => {
         const messageData = JSON.parse(message.toString());
-        const {recipient, text} = messageData;
-        if(recipient && text) {
+        const {chatId, content} = messageData;
+
+        const chat = (await Chat.find({ _id: chatId}))[0];
+        const recipientId = chat.users.find(user => user._id.valueOf() !== connection.userId)._id.valueOf();
+
+        if(chatId && content) {
             const messageDoc = await Message.create({
-                sender: connection.userId,
-                recipient,
-                text
+                senderId: connection.userId,
+                chatId,
+                content
             });
             [...wss.clients]
-            .filter(c => c.userId === recipient)
+            .filter(c => c.userId === recipientId)
             .forEach(c => c.send(JSON.stringify({
-                text, 
-                sender: connection.userId,
-                recipient,
+                content, 
+                senderId: connection.userId,
+                chatId,
                 _id: messageDoc._id
             })));
         }
