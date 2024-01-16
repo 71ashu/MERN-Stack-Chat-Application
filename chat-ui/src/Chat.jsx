@@ -5,6 +5,8 @@ import { uniqBy } from "lodash";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 import NewChatForm from "./NewChatForm";
+import { EllipsisVerticalIcon } from '@heroicons/react/24/solid';
+import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 
 const ChatsList = ({chats, id, selectedChatId, setSelectedChatId}) => {
   return (
@@ -139,7 +141,7 @@ const Chat = () => {
             <Avatar userId={id} username={username} />
             <span className="flex-1">{username}</span>
             <span className="justify-self-end relative">
-              :
+              <EllipsisVerticalIcon className="size-5" />
               <div className={"absolute rounded-md shadow bg-white transition-all right-0 " + (showDropDown ? "bottom-6 opacity-100 visible" : "bottom-0 opacity-0 invisible")}>
                 <div className="p-2 cursor-pointer" onClick={logout}>Logout</div>
               </div>
@@ -172,8 +174,8 @@ const Chat = () => {
                     value={newMessageText}
                     onChange={(ev) => setNewMessageText(ev.target.value)}
                   />
-                  <button className="bg-indigo-600 rounded text-white p-2 px-5">
-                    Send
+                  <button className="bg-indigo-600 rounded text-white p-2">
+                    <PaperAirplaneIcon className="size-5" />
                   </button>
                 </form>
               </div>
