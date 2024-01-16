@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import NewChatForm from "./NewChatForm";
 import { EllipsisVerticalIcon } from '@heroicons/react/24/solid';
 import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
+import Messages from "./Messages";
 
 const ChatsList = ({chats, id, selectedChatId, setSelectedChatId}) => {
   return (
@@ -41,7 +42,6 @@ const Chat = () => {
   const { username, id, setId, setUsername } = useContext(UserContext);
   const [newMessageText, setNewMessageText] = useState("");
   const [messages, setMessages] = useState([]);
-  const messagesDivRef = useRef();
   const [showDropDown, setShowDropDown] = useState(false);
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
@@ -76,7 +76,7 @@ const Chat = () => {
     ws.send(
       JSON.stringify({
         chatId: selectedChatId,
-        content: newMessageText,
+        content: newMessageText
       })
     );
     setNewMessageText("");
@@ -87,16 +87,12 @@ const Chat = () => {
         senderId: id,
         chatId: selectedChatId,
         _id: Date.now(),
+        createdAt: new Date()
       },
     ]);
   };
 
   const messagesWithoutDupes = uniqBy(messages, "_id");
-
-  useEffect(() => {
-    const div = messagesDivRef.current;
-    if (div) div.scrollTo(0, div.scrollHeight);
-  }, [messages]);
 
   useEffect(() => {
     if(selectedChatId) {
@@ -151,20 +147,7 @@ const Chat = () => {
         <div className="bg-slate-200 flex-1 flex flex-col p-4">
           {!!selectedChatId && (
             <>
-              <div ref={messagesDivRef} className="flex-1 flex flex-col gap-2 overflow-auto scroll-smooth">
-                {messagesWithoutDupes.map((message) => (
-                  <div key={message._id}
-                    className={
-                      "rounded-md shadow p-2 " +
-                      (message.senderId === id
-                        ? "bg-blue-500 text-white self-end"
-                        : "bg-white self-start")
-                    }
-                  >
-                    {message.content}
-                  </div>
-                ))}
-              </div>
+              <Messages messages={messagesWithoutDupes} id={id} />
               <div id="input-container" className="mt-4">
                 <form className="flex gap-2" onSubmit={sendMessage}>
                   <input
