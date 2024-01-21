@@ -32,7 +32,7 @@ const ChatsList = ({chats, id, selectedChatId, setSelectedChatId, onlinePeople})
   );
 }
 
-const Chat = () => {
+const Home = () => {
   const [ws, setWS] = useState(null);
   const [onlinePeople, setOnlinePeople] = useState([]);
   const [selectedChatId, setSelectedChatId] = useState(null);
@@ -175,4 +175,4 @@ const Chat = () => {
   );
 };
 
-export default Chat;
+export default Home;
