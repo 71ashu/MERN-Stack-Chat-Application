@@ -6,7 +6,7 @@ import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 import NewChatForm from "./NewChatForm";
 import { EllipsisVerticalIcon, PlusIcon } from '@heroicons/react/24/solid';
-import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
+import { ChatBubbleLeftRightIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import Messages from "./Messages";
 
 const ChatsList = ({chats, id, selectedChatId, setSelectedChatId, onlinePeople}) => {
@@ -161,6 +161,13 @@ const Chat = () => {
                 </form>
               </div>
             </>
+          )}
+          {!selectedChatId && (
+            <div className="flex flex-col flex-1 justify-center items-center text-center text-slate-400">
+              <ChatBubbleLeftRightIcon className="size-20 mb-4"/>
+              <h4 className="text-xl font-bold">It's nice to chat with someone</h4>
+              <p>Pick a person from your left menu <br />and start a conversation</p>
+            </div>
           )}
         </div>
       </div>
