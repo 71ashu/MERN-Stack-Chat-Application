@@ -24,7 +24,7 @@ const Messages = ({ messages, id }) => {
     const DateDiv = ({ date }) => (
       <div className="flex items-center">
         <hr className="flex-1 border-slate-300" />
-        <div className="text-slate-400 px-2">{date}</div>
+        <div className="text-slate-400 text-sm px-2">{date}</div>
         <hr className="flex-1 border-slate-300" />
       </div>
     );
