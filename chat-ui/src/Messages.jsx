@@ -15,34 +15,33 @@ const Messages = ({ messages, id }) => {
   }, [messages]);
 
   return (
-    <div
-      ref={messagesDivRef}
-      className="flex-1 flex flex-col gap-2 overflow-auto scroll-smooth"
-    >
-      {messages.map((message) => {
-        if (message.senderId === id)
-          return (
-            <div key={message._id} className="self-end grid justify-items-end">
-              <div className="inline-flex rounded-md shadow p-2 bg-blue-500 text-white">
-                {message.content}
+    <div ref={messagesDivRef} className="flex-1 grid overflow-auto scroll-smooth">
+      <div className="flex flex-col gap-2 items-end align-self-end">
+        {messages.map((message) => {
+          if (message.senderId === id)
+            return (
+              <div key={message._id} className="self-end grid justify-items-end">
+                <div className="inline-flex rounded-md shadow p-2 bg-blue-500 text-white">
+                  {message.content}
+                </div>
+                <span className="text-xs text-slate-400">
+                  {formatDate(message.createdAt)}
+                </span>
               </div>
-              <span className="text-xs text-slate-400">
-                {formatDate(message.createdAt)}
-              </span>
-            </div>
-          );
-        else
-          return (
-            <div key={message._id} className="self-start grid justify-items-start">
-              <div className="inline-flex rounded-md shadow p-2 bg-white">
-                {message.content}
+            );
+          else
+            return (
+              <div key={message._id} className="self-start grid justify-items-start">
+                <div className="inline-flex rounded-md shadow p-2 bg-white">
+                  {message.content}
+                </div>
+                <span className="text-xs text-slate-400">
+                  {formatDate(message.createdAt)}
+                </span>
               </div>
-              <span className="text-xs text-slate-400">
-                {formatDate(message.createdAt)}
-              </span>
-            </div>
-          );
-      })}
+            );
+        })}
+      </div>
     </div>
   );
 };
