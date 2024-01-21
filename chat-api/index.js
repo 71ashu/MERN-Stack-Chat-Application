@@ -136,7 +136,7 @@ wss.on('connection', (connection, req) => {
             if(client.userId) users.set(client.userId, { userId: client.userId, username: client.username });
         });
 
-        const usersArray = Array.from(users).map(([userId, user]) => user);
+        const usersArray = Array.from(users);
         
         [...wss.clients].forEach(client => {
             client.send(JSON.stringify({
@@ -145,22 +145,25 @@ wss.on('connection', (connection, req) => {
         });
     }
     
-      connection.isAlive = true;
+    connection.isAlive = true;
     
-      connection.timer = setInterval(() => {
+    connection.timer = setInterval(() => {
         connection.ping();
         connection.deathTimer = setTimeout(() => {
-          connection.isAlive = false;
-          clearInterval(connection.timer);
-          connection.terminate();
-          notifyAboutOnlinePeople();
-          console.log('dead');
+            connection.isAlive = false;
+            clearInterval(connection.timer);
+            connection.terminate();
+            notifyAboutOnlinePeople();
+            const username = connection.username || null;
+            console.log('dead', username);
         }, 1000);
-      }, 5000);
+    }, 5000);
     
-      connection.on('pong', () => {
+    connection.on('pong', (e) => {
         clearTimeout(connection.deathTimer);
-      });
+    });
+
+    connection.on('close', notifyAboutOnlinePeople);
 
     const cookies = req.headers.cookie;
     if(cookies) {

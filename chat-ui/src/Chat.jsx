@@ -1,17 +1,17 @@
-import { useContext, useEffect, useState, useRef } from "react";
+import { useContext, useEffect, useState } from "react";
 import Avatar from "./Avatar";
 import { UserContext } from "./UserContext";
 import { uniqBy } from "lodash";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 import NewChatForm from "./NewChatForm";
-import { EllipsisVerticalIcon } from '@heroicons/react/24/solid';
+import { EllipsisVerticalIcon, PlusIcon } from '@heroicons/react/24/solid';
 import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import Messages from "./Messages";
 
-const ChatsList = ({chats, id, selectedChatId, setSelectedChatId}) => {
+const ChatsList = ({chats, id, selectedChatId, setSelectedChatId, onlinePeople}) => {
   return (
-    <div className="flex-1 overflow-auto">
+    <div className="flex-1 overflow-auto flex flex-col gap-2">
       {chats.map(({users, _id: chatId}) => {
         const { username, _id: userId } = users.find(u => u._id !== id);
         return (
@@ -19,14 +19,11 @@ const ChatsList = ({chats, id, selectedChatId, setSelectedChatId}) => {
             key={chatId}
             onClick={() => setSelectedChatId(chatId)}
             className={
-              "border-b border-gray-100 px-[15px] py-[10px] flex items-center gap-2 relative cursor-pointer " +
+              "px-[15px] py-[10px] rounded-md flex items-center gap-2 relative cursor-pointer hover:bg-blue-50 " +
               (chatId === selectedChatId ? "bg-blue-50" : "")
             }
           >
-            {chatId === selectedChatId && (
-              <div className="w-1 bg-blue-500 h-full rounded-r-md absolute left-0 top-0"></div>
-            )}
-            <Avatar userId={userId} username={username} />
+            <Avatar userId={userId} username={username} online={onlinePeople.has(userId)}/>
             <span>{username}</span>
           </div>
         );
@@ -49,7 +46,7 @@ const Chat = () => {
 
   useEffect(() => {
     connectToWS();
-  }, []);
+  }, [selectedChatId]);
 
   const connectToWS = () => {
     const ws = new WebSocket("ws://localhost:4000");
@@ -63,9 +60,9 @@ const Chat = () => {
 
   const handleMessage = (ev) => {
     const messageData = JSON.parse(ev.data);
-    console.log(messageData, messages);
     if ("online" in messageData) {
-      setOnlinePeople(messageData.online.filter(({userId}) => userId !== id));
+      const onlineUsers = messageData.online.filter(({userId}) => userId !== id);
+      setOnlinePeople(new Map(onlineUsers));
     } else if ("content" in messageData) {
       setMessages((prev) => [...prev, { ...messageData }]);
     }
@@ -102,6 +99,7 @@ const Chat = () => {
 
   const logout = () => {
     axios.post('/logout').then(() => {
+      ws.close();
       setWS(null);
       setId(null);
       setUsername(null);
@@ -124,17 +122,17 @@ const Chat = () => {
   return (
     <div className="bg-blue-50 h-screen">
       <div className="max-w-screen-xl md:w-full flex m-auto h-full shadow">
-        <div className="bg-white basis-1/4 flex flex-col">
-          <div className="text-blue-600 font-bold mb-4 p-2">MERN Chat</div>
-          <div className="p-2">
-            <button className="bg-indigo-600 rounded text-white p-1 px-3" onClick={openModal}>
-              +
+        <div className="bg-white basis-1/4 flex flex-col p-4">
+          <div className="flex items-center border-b pb-4 mb-4">
+            <div className="text-blue-600 font-bold flex-1">MERN Chat</div>
+            <button className="p-1 px-3" onClick={openModal}>
+              <PlusIcon className="size-5"/>
             </button>
             <NewChatForm userId={id} showForm={showForm} closeModal={closeModal}/>
           </div>
-          <ChatsList chats={chats} selectedChatId={selectedChatId} setSelectedChatId={setSelectedChatId} id={id} />
+          <ChatsList chats={chats} selectedChatId={selectedChatId} setSelectedChatId={setSelectedChatId} id={id} onlinePeople={onlinePeople}/>
           <div className="border-t px-[15px] py-[10px] flex items-center gap-2 cursor-pointer" onClick={() => setShowDropDown(!showDropDown)}>
-            <Avatar userId={id} username={username} />
+            <Avatar userId={id} username={username} online={true}/>
             <span className="flex-1">{username}</span>
             <span className="justify-self-end relative">
               <EllipsisVerticalIcon className="size-5" />
