@@ -1,10 +1,10 @@
 import axios from 'axios'
-import { UserContextProvider } from "./UserContext";
+import { UserContextProvider } from "./context/UserContext";
 import { Routes, Route } from 'react-router-dom';
-import Login from './Login';
-import Register from './Register';
-import CheckAuth from './Auth';
-import Home from './Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import CheckAuth from './auth/Auth';
+import Home from './pages/Home';
 
 function App() {
   axios.defaults.baseURL = 'http://localhost:4000';

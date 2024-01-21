@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useContext, useState } from "react";
-import { UserContext } from "./UserContext";
+import { UserContext } from "../context/UserContext";
 import { Link, useNavigate } from "react-router-dom";
 
 const Register = () => {
@@ -15,7 +15,7 @@ const Register = () => {
         const {data} = await axios.post('/register', { username, password });
         setLoggedInUsername(username);
         setId(data.id);
-        navigate('/chats');
+        navigate('/home');
     }
 
     return (

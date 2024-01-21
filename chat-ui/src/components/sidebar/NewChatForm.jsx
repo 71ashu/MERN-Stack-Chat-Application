@@ -1,7 +1,7 @@
 import { Transition, Dialog } from "@headlessui/react";
 import axios from "axios";
 import { Fragment, useEffect, useState } from "react";
-import Avatar from './Avatar';
+import Avatar from '../Avatar';
 
 const SearchUser = ({selectedUser, setSelectedUser}) => {
 

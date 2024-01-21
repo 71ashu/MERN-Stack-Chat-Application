@@ -1,6 +1,6 @@
 import { useContext } from "react";
-import { UserContext } from "./UserContext";
-import Login from "./Login";
+import { UserContext } from "../context/UserContext";
+import Login from "../pages/Login";
 
 
 const CheckAuth = ({ children }) => {

@@ -38,7 +38,7 @@ const Messages = ({ messages, id }) => {
   }
 
   return (
-    <div ref={messagesDivRef} className="flex-1 grid overflow-auto scroll-smooth">
+    <div ref={messagesDivRef} className="flex-1 grid overflow-auto">
       <div className="flex flex-col gap-2 self-end">
         {messages.map((message, index) => (
           <>
