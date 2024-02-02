@@ -6,8 +6,9 @@ import Messages from "./Messages";
 import { useContext, useState } from "react";
 import { uniqBy } from "lodash";
 import { UserContext } from "../../context/UserContext";
+import ChatHeader from "./ChatHeader";
 
-const Chat = ({ ws, messages, setMessages, selectedChatId }) => {
+const Chat = ({ ws, messages, setMessages, selectedChat }) => {
   const [newMessageText, setNewMessageText] = useState("");
   const { id } = useContext(UserContext);
 
@@ -15,7 +16,7 @@ const Chat = ({ ws, messages, setMessages, selectedChatId }) => {
     ev.preventDefault();
     ws.send(
       JSON.stringify({
-        chatId: selectedChatId,
+        chatId: selectedChat._id,
         content: newMessageText
       })
     );
@@ -25,7 +26,7 @@ const Chat = ({ ws, messages, setMessages, selectedChatId }) => {
       {
         content: newMessageText,
         senderId: id,
-        chatId: selectedChatId,
+        chatId: selectedChat._id,
         _id: Date.now(),
         createdAt: new Date()
       },
@@ -35,11 +36,12 @@ const Chat = ({ ws, messages, setMessages, selectedChatId }) => {
   const messagesWithoutDupes = uniqBy(messages, "_id");
 
   return (
-    <div className="bg-slate-200 flex-1 flex flex-col p-4">
-      {!!selectedChatId && (
+    <div className="bg-slate-200 flex-1 flex flex-col">
+      {!!selectedChat && (
         <>
+          <ChatHeader selectedChat={selectedChat} id={id}/>
           <Messages messages={messagesWithoutDupes} id={id} />
-          <div id="input-container" className="mt-4">
+          <div id="input-container" className="p-4">
             <form className="flex gap-2" onSubmit={sendMessage}>
               <input
                 type="text"
@@ -55,7 +57,7 @@ const Chat = ({ ws, messages, setMessages, selectedChatId }) => {
           </div>
         </>
       )}
-      {!selectedChatId && (
+      {!selectedChat && (
         <div className="flex flex-col flex-1 justify-center items-center text-center text-slate-400">
           <ChatBubbleLeftRightIcon className="size-20 mb-4" />
           <h4 className="text-xl font-bold">It's nice to chat with someone</h4>

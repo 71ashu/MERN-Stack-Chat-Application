@@ -8,18 +8,20 @@ import Avatar from "../Avatar";
 const ChatsList = ({
   chats,
   id,
-  selectedChatId,
-  setSelectedChatId,
+  selectedChat,
+  setSelectedChat,
   onlinePeople,
 }) => {
   return (
     <div className="flex-1 overflow-auto flex flex-col gap-2">
-      {chats.map(({ users, _id: chatId }) => {
+      {chats.map(chat => {
+        const { users, _id: chatId } = chat;
         const { username, _id: userId } = users.find((u) => u._id !== id);
+        const selectedChatId = selectedChat ? selectedChat._id : null;
         return (
           <div
             key={chatId}
-            onClick={() => setSelectedChatId(chatId)}
+            onClick={() => setSelectedChat(chat)}
             className={
               "px-[15px] py-[10px] rounded-md flex items-center gap-2 relative cursor-pointer hover:bg-blue-50 " +
               (chatId === selectedChatId ? "bg-blue-50" : "")
@@ -38,7 +40,7 @@ const ChatsList = ({
   );
 };
 
-const Sidebar = ({ selectedChatId, setSelectedChatId, onlinePeople, handleLogout }) => {
+const Sidebar = ({ selectedChat, setSelectedChat, onlinePeople, handleLogout }) => {
 	const [showDropDown, setShowDropDown] = useState(false);
 	const [showForm, setShowForm] = useState(false);
 	const [chats, setChats] = useState([]);
@@ -72,8 +74,8 @@ const Sidebar = ({ selectedChatId, setSelectedChatId, onlinePeople, handleLogout
       </div>
       <ChatsList
         chats={chats}
-        selectedChatId={selectedChatId}
-        setSelectedChatId={setSelectedChatId}
+        selectedChat={selectedChat}
+        setSelectedChat={setSelectedChat}
         id={id}
         onlinePeople={onlinePeople}
       />

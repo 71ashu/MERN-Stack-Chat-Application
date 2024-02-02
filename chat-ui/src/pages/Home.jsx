@@ -8,14 +8,14 @@ import Chat from "../components/chat/Chat";
 const Home = () => {
   const [ws, setWS] = useState(null);
   const [onlinePeople, setOnlinePeople] = useState([]);
-  const [selectedChatId, setSelectedChatId] = useState(null);
+  const [selectedChat, setSelectedChat] = useState(null);
   const { id, setId, setUsername } = useContext(UserContext);
   const [messages, setMessages] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     connectToWS();
-  }, [selectedChatId]);
+  }, [selectedChat]);
 
   const connectToWS = () => {
     const ws = new WebSocket("ws://localhost:4000");
@@ -40,12 +40,12 @@ const Home = () => {
   };
 
   useEffect(() => {
-    if (selectedChatId) {
+    if (selectedChat && selectedChat._id) {
       axios
-        .get(`/messages/${selectedChatId}`)
+        .get(`/messages/${selectedChat._id}`)
         .then((res) => setMessages(res.data));
     }
-  }, [selectedChatId]);
+  }, [selectedChat]);
 
   const handleLogout = () => {
     ws.close();
@@ -59,8 +59,8 @@ const Home = () => {
     <div className="bg-blue-50 h-screen">
       <div className="max-w-screen-xl md:w-full flex m-auto h-full shadow">
         <Sidebar
-          selectedChatId={selectedChatId}
-          setSelectedChatId={setSelectedChatId}
+          selectedChat={selectedChat}
+          setSelectedChat={setSelectedChat}
           onlinePeople={onlinePeople}
           handleLogout={handleLogout}
         />
@@ -68,7 +68,7 @@ const Home = () => {
           ws={ws}
           messages={messages}
           setMessages={setMessages}
-          selectedChatId={selectedChatId}
+          selectedChat={selectedChat}
         />
       </div>
     </div>
