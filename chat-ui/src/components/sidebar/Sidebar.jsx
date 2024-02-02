@@ -4,14 +4,15 @@ import { UserContext } from "../../context/UserContext";
 import { EllipsisVerticalIcon, PlusIcon } from "@heroicons/react/24/outline";
 import NewChatForm from './NewChatForm';
 import Avatar from "../Avatar";
+import { OnlinePeopleContext } from "../../context/OnlinePeopleContext";
 
 const ChatsList = ({
   chats,
   id,
   selectedChat,
-  setSelectedChat,
-  onlinePeople,
+  setSelectedChat
 }) => {
+  const { onlinePeople } = useContext(OnlinePeopleContext);
   return (
     <div className="flex-1 overflow-auto flex flex-col gap-2">
       {chats.map(chat => {
@@ -40,7 +41,7 @@ const ChatsList = ({
   );
 };
 
-const Sidebar = ({ selectedChat, setSelectedChat, onlinePeople, handleLogout }) => {
+const Sidebar = ({ selectedChat, setSelectedChat, handleLogout }) => {
 	const [showDropDown, setShowDropDown] = useState(false);
 	const [showForm, setShowForm] = useState(false);
 	const [chats, setChats] = useState([]);
@@ -77,7 +78,6 @@ const Sidebar = ({ selectedChat, setSelectedChat, onlinePeople, handleLogout }) 
         selectedChat={selectedChat}
         setSelectedChat={setSelectedChat}
         id={id}
-        onlinePeople={onlinePeople}
       />
       <div
         className="border-t px-[15px] py-[10px] flex items-center gap-2 cursor-pointer"

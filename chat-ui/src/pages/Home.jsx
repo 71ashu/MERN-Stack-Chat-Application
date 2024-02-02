@@ -4,10 +4,11 @@ import axios from "axios";
 import Sidebar from "../components/sidebar/Sidebar";
 import { useNavigate } from "react-router-dom";
 import Chat from "../components/chat/Chat";
+import { OnlinePeopleContext } from "../context/OnlinePeopleContext";
 
 const Home = () => {
   const [ws, setWS] = useState(null);
-  const [onlinePeople, setOnlinePeople] = useState([]);
+  const {setOnlinePeople} = useContext(OnlinePeopleContext);
   const [selectedChat, setSelectedChat] = useState(null);
   const { id, setId, setUsername } = useContext(UserContext);
   const [messages, setMessages] = useState([]);
@@ -61,7 +62,6 @@ const Home = () => {
         <Sidebar
           selectedChat={selectedChat}
           setSelectedChat={setSelectedChat}
-          onlinePeople={onlinePeople}
           handleLogout={handleLogout}
         />
         <Chat
