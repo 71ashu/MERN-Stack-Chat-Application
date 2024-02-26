@@ -6,15 +6,20 @@ import { Link, useNavigate } from "react-router-dom";
 const Register = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [retypePassword, setRetypePassword] = useState("");
   const { setUsername: setLoggedInUsername, setId } = useContext(UserContext);
   const navigate = useNavigate();
 
   const registerAPI = async (ev) => {
     ev.preventDefault();
-    const { data } = await axios.post("/register", { username, password });
-    setLoggedInUsername(username);
-    setId(data.id);
-    navigate("/home");
+    try {
+      const { data } = await axios.post("/register", { username, password, retypePassword });
+      setLoggedInUsername(username);
+      setId(data.id);
+      navigate("/home");
+    } catch(err) {
+      console.log(err);
+    }
   };
 
   return (
@@ -61,6 +66,27 @@ const Register = () => {
                 required
                 className="block w-full rounded-md border-0 py-1.5 px-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 onChange={(ev) => setPassword(ev.target.value)}
+              />
+            </div>
+          </div>
+          <div className="mt-10">
+            <div className="flex items-center justify-between">
+              <label
+                for="password"
+                className="inline text-sm font-medium leading-6 text-gray-900"
+              >
+                Retype Password
+              </label>
+            </div>
+            <div className="mt-2">
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                required
+                className="block w-full rounded-md border-0 py-1.5 px-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                onChange={(ev) => setRetypePassword(ev.target.value)}
               />
             </div>
           </div>

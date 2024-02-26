@@ -80,7 +80,10 @@ app.post('/login', async (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-    const {username, password} = req.body;
+    const {username, password, retypePassword} = req.body;
+    if(password !== retypePassword) {
+        res.status(400).json('Passwords do not match');
+    }
     try {
         const hashedPassword = bcrypt.hashSync(password, bcryptSalt);
         const createdUser = await User.create({username, password: hashedPassword});
